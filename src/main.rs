@@ -7,7 +7,7 @@ pub mod drawing {
     tonic::include_proto!("drawing");
 }
 
-use drawing::{drawing_server::{Drawing, DrawingServer}, DrawingCanvas};
+use drawing::{drawing_canvas::Row, drawing_server::{Drawing, DrawingServer}, DrawingCanvas};
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +35,19 @@ impl Drawing for TestService {
         println!("Got a request: {:?}", request.metadata());
         let mut stream = request.into_inner();
 
+
+        let canv = DrawingCanvas {
+            rows: std::iter::repeat_with(|| Row { cols: vec![0; 50] }).take(50).collect(),
+
+        };
+
         let output = async_stream::try_stream! {
+            let init = DrawingCanvas {
+                rows: std::iter::repeat_with(|| Row { cols: vec![0; 50] }).take(50).collect(),
+            };
+
+            yield init;
+
             while let Some(canvas) = stream.message().await? {
                 yield canvas;
             }
