@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package drawing;
+
+// Define the Canvas message, which includes a two-dimensional array of signed integers.
+// Since proto3 does not directly support 2D arrays, we'll use a repeated message
+// that contains a repeated field.
+message DrawingCanvas {
+  // Represents a row in the canvas.
+  message Row {
+    repeated int32 cols = 1; // Each column in the row, containing signed integers.
+  }
+  repeated Row rows = 1; // The rows of the canvas.
+}
+
+// The Drawing service definition.
+service Drawing {
+  // The Connect method provides a two-way streaming RPC, where both the client
+  // and server can send a stream of Canvas messages.
+  rpc OpenConnection (stream DrawingCanvas) returns (stream DrawingCanvas);
+}
