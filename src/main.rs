@@ -4,19 +4,31 @@ use tokio::sync::Mutex;
 use tokio_stream::Stream;
 use tonic::{server::NamedService, transport::Server, Request, Response, Status, Streaming};
 
+mod proto {
+    tonic::include_proto!("drawing");
+
+  pub(crate) const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("drawing_descriptor");
+}
+
 pub mod drawing {
     tonic::include_proto!("drawing");
 }
 
 use drawing::{drawing_server::{Drawing, DrawingServer}, DrawingCanvas};
+use crate::drawing::{HealthCheckRequest, HealthCheckResponse};
 
 mod canvas;
 
 #[tokio::main]
 async fn main() {
-    let addr = "127.0.0.1:7878".parse().unwrap();
+    let addr = "0.0.0.0:7878".parse().unwrap();
+
+    let reflection_service = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
+        .build().unwrap();
 
     Server::builder()
+        .add_service(reflection_service)
         .add_service(DrawingServer::new(TestService {
             canon: Arc::new(Mutex::new(canvas::blank()))
         }))
@@ -58,6 +70,13 @@ impl Drawing for TestService {
 
         Ok(Response::new(Box::pin(output) as Self::OpenConnectionStream))
     }
+
+  async fn health_check(&self, request: Request<HealthCheckRequest>) -> Result<Response<HealthCheckResponse>, Status> {
+    println!("Got a request: {:?}", request.metadata());
+    Ok(Response::new(HealthCheckResponse {
+      status: "OK".to_string()
+    }))
+  }
 }
 
 impl NamedService for TestService {
