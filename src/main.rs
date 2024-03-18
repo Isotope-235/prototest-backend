@@ -64,7 +64,7 @@ impl Drawing for TestService {
             while let Some(canvas) = stream.message().await? {
                 let mut lock = arc_clone.lock().await;
                 *lock = canvas::merge(&*lock, &canvas);
-                yield (*lock).clone();
+                yield canvas::clamp(&*lock);
             }
         };
 
