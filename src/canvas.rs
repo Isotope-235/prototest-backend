@@ -14,7 +14,7 @@ pub fn clamp(canvas: impl Deref<Target = DrawingCanvas>) -> DrawingCanvas {
     for row in &canvas.rows {
         out.push(Row { cols: Vec::with_capacity(50) } );
         for px in &row.cols {
-            out.last_mut().unwrap().cols.push(if *px <= 0 {-1} else {1});
+            out.last_mut().unwrap().cols.push(*px);
         }
     }
 
@@ -27,7 +27,7 @@ pub fn merge(a: &DrawingCanvas, b: &DrawingCanvas) -> DrawingCanvas {
     for (a, b) in a.rows.iter().zip(&b.rows) {
         rows.push(Row { cols: Vec::with_capacity(50) });
         for (a, b) in a.cols.iter().zip(&b.cols) {
-            rows.last_mut().unwrap().cols.push((a + b).clamp(-1, 1));
+            rows.last_mut().unwrap().cols.push((a + b).clamp(0, 1));
         }
     }
 
