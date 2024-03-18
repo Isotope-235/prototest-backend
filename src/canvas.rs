@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::drawing::{drawing_canvas::Row, DrawingCanvas};
 
 pub fn blank() -> DrawingCanvas {
@@ -6,7 +8,7 @@ pub fn blank() -> DrawingCanvas {
     }
 }
 
-pub fn clamp(canvas: &DrawingCanvas) -> DrawingCanvas {
+pub fn clamp(canvas: impl Deref<Target = DrawingCanvas>) -> DrawingCanvas {
     let mut out = Vec::with_capacity(50);
 
     for row in &canvas.rows {
