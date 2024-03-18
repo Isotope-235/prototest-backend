@@ -14,7 +14,7 @@ pub fn clamp(canvas: impl Deref<Target = DrawingCanvas>) -> DrawingCanvas {
     for row in &canvas.rows {
         out.push(Row { cols: Vec::with_capacity(50) } );
         for px in &row.cols {
-            out.last_mut().unwrap().cols.push(if *px == 0 {-1} else {1});
+            out.last_mut().unwrap().cols.push(if *px <= 0 {-1} else {1});
         }
     }
 
