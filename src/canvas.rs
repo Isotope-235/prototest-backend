@@ -7,13 +7,14 @@ pub fn blank() -> DrawingCanvas {
 }
 
 pub fn merge(a: &DrawingCanvas, b: &DrawingCanvas) -> DrawingCanvas {
-    let mut rows = Vec::new();
-    for (a, b) in a.rows.iter().zip(b.rows.iter()) {
-        let mut cols = Vec::new();
-        for (a, b) in a.cols.iter().zip(b.cols.iter()) {
-            cols.push(if *a == 0 { *b } else { *a });
+    let mut rows = Vec::with_capacity(50);
+
+    for (a, b) in a.rows.iter().zip(&b.rows) {
+        rows.push(Row { cols: Vec::with_capacity(50) });
+        for (a, b) in a.cols.iter().zip(&b.cols) {
+            rows.last_mut().unwrap().cols.push((a + b).min(1).max(0));
         }
-        rows.push(Row { cols });
     }
+
     DrawingCanvas { rows }
 }
