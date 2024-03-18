@@ -1,6 +1,6 @@
 use std::{pin::Pin, sync::Arc};
 
-use tokio::sync::Mutex;
+use tokio::sync::{watch, Mutex};
 use tokio_stream::Stream;
 use tonic::{server::NamedService, transport::Server, Request, Response, Status, Streaming};
 
@@ -27,11 +27,17 @@ async fn main() {
         .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
         .build().unwrap();
 
+    let canon = Arc::new(Mutex::new(canvas::blank()));
+    let service = TestService {
+        canon,
+        channel: Arc::new(Mutex::new(watch::channel(canvas::blank())))
+    };
+
+    let drawing_server = DrawingServer::new(service);
+
     Server::builder()
         .add_service(reflection_service)
-        .add_service(DrawingServer::new(TestService {
-            canon: Arc::new(Mutex::new(canvas::blank()))
-        }))
+        .add_service(drawing_server)
         .serve(addr)
         .await
         .unwrap();
@@ -39,7 +45,8 @@ async fn main() {
 
 #[derive(Clone)]
 pub struct TestService {
-    canon: Arc<Mutex<DrawingCanvas>>
+    canon: Arc<Mutex<DrawingCanvas>>,
+    channel: Arc<Mutex<(watch::Sender<DrawingCanvas>, watch::Receiver<DrawingCanvas>)>>
 }
 
 #[tonic::async_trait]
@@ -55,17 +62,38 @@ impl Drawing for TestService {
         let mut stream = request.into_inner();
 
         let arc_clone = self.canon.clone();
+        let chan_clone = Arc::clone(&self.channel);
+
+
+        let channel_arc_clone = Arc::clone(&self.channel);
 
         let output = async_stream::try_stream! {
-            let lock = arc_clone.lock().await;
-            yield (*lock).clone();
-            drop(lock);
 
-            while let Some(canvas) = stream.message().await? {
-                let mut lock = arc_clone.lock().await;
-                (_, *lock) = canvas::merge(&*lock, &canvas);
-                yield canvas::clamp(lock);
+
+            let arc_clone = arc_clone.clone();
+            let arc_clone2 = arc_clone.clone();
+            tokio::spawn(async move {
+                while let Some(message) = stream.message().await.unwrap() {
+                    let mut lock = arc_clone.lock().await;
+
+                    let updated_canvas = canvas::merge(&*lock, &message).1;
+                    *lock = canvas::clamp(&updated_canvas);
+
+                    let chan_lock = chan_clone.lock().await;
+
+                    chan_lock.0.send((*lock).clone()).unwrap();
+                }
+            });
+
+
+            let mut channel_lock = channel_arc_clone.lock().await;
+
+            while (channel_lock).1.changed().await.is_ok() {
+                let lock = arc_clone2.lock().await;
+                yield (*lock).clone();
+                drop(lock);
             }
+
         };
 
         Ok(Response::new(Box::pin(output) as Self::OpenConnectionStream))
