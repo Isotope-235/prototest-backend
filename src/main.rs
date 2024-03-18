@@ -68,6 +68,10 @@ impl Drawing for TestService {
         let channel_arc_clone = Arc::clone(&self.channel);
 
         let output = async_stream::try_stream! {
+            let ac = arc_clone.clone();
+            let lock = ac.lock().await;
+            yield (*lock).clone();
+            drop(lock);
 
 
             let arc_clone = arc_clone.clone();
