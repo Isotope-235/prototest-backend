@@ -17,7 +17,7 @@ message DrawingCanvas {
 service Drawing {
   // The Connect method provides a two-way streaming RPC, where both the client
   // and server can send a stream of Canvas messages.
-  rpc OpenConnection (stream DrawingCanvas) returns (stream DrawingCanvas);
+  rpc UploadCanvas (DrawingCanvas) returns (DrawingCanvas);
 
   rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
 }

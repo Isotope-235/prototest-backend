@@ -10,7 +10,11 @@ fn sizevec<T>() -> Vec<T> {
 
 pub fn blank() -> DrawingCanvas {
     DrawingCanvas {
-        rows: std::iter::repeat_with(|| Row { cols: vec![0; SIZE] }).take(SIZE).collect(),
+        rows: std::iter::repeat_with(|| Row {
+            cols: vec![0; SIZE],
+        })
+        .take(SIZE)
+        .collect(),
     }
 }
 
@@ -18,7 +22,7 @@ pub fn clamp(canvas: impl Deref<Target = DrawingCanvas>) -> DrawingCanvas {
     let mut out = sizevec();
 
     for row in &canvas.rows {
-        out.push(Row { cols: sizevec() } );
+        out.push(Row { cols: sizevec() });
         for px in &row.cols {
             out.last_mut().unwrap().cols.push(*px);
         }
