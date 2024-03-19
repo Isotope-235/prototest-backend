@@ -37,7 +37,6 @@ async fn main() {
     let drawing_server = DrawingServer::new(service);
 
     Server::builder()
-        .clone()
         .add_service(reflection_service)
         .add_service(drawing_server)
         .serve(addr)
