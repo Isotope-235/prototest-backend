@@ -1,6 +1,12 @@
 use std::sync::Mutex;
 
+use proto::{
+    drawing_server::{Drawing, DrawingServer},
+    DrawingCanvas, HealthCheckRequest,
+};
 use tonic::{server::NamedService, transport::Server, Request, Response, Status};
+
+use crate::proto::HealthCheckResponse;
 
 mod proto {
     tonic::include_proto!("drawing");
@@ -8,16 +14,6 @@ mod proto {
     pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
         tonic::include_file_descriptor_set!("drawing_descriptor");
 }
-
-pub mod drawing {
-    tonic::include_proto!("drawing");
-}
-
-use crate::drawing::{HealthCheckRequest, HealthCheckResponse};
-use drawing::{
-    drawing_server::{Drawing, DrawingServer},
-    DrawingCanvas,
-};
 
 mod canvas;
 

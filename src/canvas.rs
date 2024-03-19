@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::drawing::{drawing_canvas::Row, DrawingCanvas};
+use crate::proto::{drawing_canvas::Row, DrawingCanvas};
 
 const SIZE: usize = 50;
 
