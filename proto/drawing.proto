@@ -15,7 +15,7 @@ message DrawingCanvas {
 
 // The empty message type.
 //
-// Protobuf requires that an RPC call contains a message, so Unit exists to facilitate RPCs that take no parameters.
+// Protobuf requires that an RPC contains a message, so Unit exists to facilitate RPCs that take no parameters.
 message Unit {}
 
 // The Drawing service definition.
