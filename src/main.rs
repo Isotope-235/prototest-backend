@@ -50,16 +50,14 @@ impl Drawing for TestService {
     async fn upload_canvas(
         &self,
         uploaded: Request<DrawingCanvas>,
-    ) -> Result<Response<DrawingCanvas>, Status> {
+    ) -> Result<Response<Unit>, Status> {
         let canvas = uploaded.into_inner();
 
         let mut lock = self.canon.lock().unwrap();
 
         let _ = canvas::merge_into(&mut *lock, &canvas);
 
-        let clamped = canvas::clamp(&*lock);
-
-        Ok(Response::new(clamped))
+        Ok(Response::new(Unit {}))
     }
 
     async fn pull_canvas(
