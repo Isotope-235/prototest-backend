@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use proto::{
     drawing_server::{Drawing, DrawingServer},
@@ -27,7 +27,7 @@ async fn main() {
         .unwrap();
 
     let service = TestService {
-        canon: Mutex::new(canvas::blank()),
+        canon: Arc::new(Mutex::new(canvas::blank())),
     };
 
     let drawing_server = DrawingServer::new(service);
@@ -38,10 +38,11 @@ async fn main() {
         .serve(addr)
         .await
         .unwrap();
+    is_send::<TestService>()
 }
 
 pub struct TestService {
-    canon: Mutex<DrawingCanvas>,
+    canon: Arc<Mutex<DrawingCanvas>>,
 }
 
 #[tonic::async_trait]
@@ -52,11 +53,12 @@ impl Drawing for TestService {
     ) -> Result<Response<DrawingCanvas>, Status> {
         let canvas = uploaded.into_inner();
 
-        let (_, new) = {
+        let new;
+        {
             let lock = self.canon.lock().unwrap();
-
-            canvas::merge(&lock, &canvas)
-        };
+    
+            (_, new) = canvas::merge(&lock, &canvas)
+        }
 
         let clamped = canvas::clamp(&new);
 
@@ -74,6 +76,14 @@ impl Drawing for TestService {
     }
 }
 
+fn is_send<T: Send + Sync + 'static>() {}
+
 impl NamedService for TestService {
     const NAME: &'static str = "test";
+}
+
+impl Clone for TestService {
+    fn clone(&self) -> Self {
+        Self { canon: Arc::clone(&self.canon) }
+    }
 }
