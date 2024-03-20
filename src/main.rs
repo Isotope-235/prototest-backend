@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use proto::{
     drawing_server::{Drawing, DrawingServer},
-    DrawingCanvas, HealthCheckRequest, Unit
+    DrawingCanvas, HealthCheckRequest, Unit,
 };
 use tonic::{server::NamedService, transport::Server, Request, Response, Status};
 
@@ -38,7 +38,6 @@ async fn main() {
         .serve(addr)
         .await
         .unwrap();
-    is_send::<TestService>()
 }
 
 pub struct TestService {
@@ -55,18 +54,15 @@ impl Drawing for TestService {
 
         let mut lock = self.canon.lock().unwrap();
 
-        let _ = canvas::merge_into(&mut *lock, &canvas);
+        canvas::merge_into(&mut *lock, &canvas);
 
         Ok(Response::new(Unit {}))
     }
 
-    async fn pull_canvas(
-        &self,
-        _: Request<Unit>
-     ) -> Result<Response<DrawingCanvas>, Status> {
+    async fn pull_canvas(&self, _: Request<Unit>) -> Result<Response<DrawingCanvas>, Status> {
         let lock = self.canon.lock().unwrap();
 
-        Ok(Response::new(canvas::clamp(&*lock)))
+        Ok(Response::new(lock.clone()))
     }
 
     async fn health_check(
@@ -80,14 +76,14 @@ impl Drawing for TestService {
     }
 }
 
-fn is_send<T: Send + Sync + 'static>() {}
-
 impl NamedService for TestService {
     const NAME: &'static str = "test";
 }
 
 impl Clone for TestService {
     fn clone(&self) -> Self {
-        Self { canon: Arc::clone(&self.canon) }
+        Self {
+            canon: Arc::clone(&self.canon),
+        }
     }
 }

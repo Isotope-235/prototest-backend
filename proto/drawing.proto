@@ -6,11 +6,7 @@ package drawing;
 // Since proto3 does not directly support 2D arrays, we'll use a repeated message
 // that contains a repeated field.
 message DrawingCanvas {
-  // Represents a row in the canvas.
-  message Row {
-    repeated int32 cols = 1; // Each column in the row, containing signed integers.
-  }
-  repeated Row rows = 1; // The rows of the canvas.
+  repeated int32 contents = 1;
 }
 
 // The empty message type.
