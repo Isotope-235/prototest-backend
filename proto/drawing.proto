@@ -13,11 +13,18 @@ message DrawingCanvas {
   repeated Row rows = 1; // The rows of the canvas.
 }
 
+// The empty message type.
+//
+// Protobuf requires that an RPC call contains a message, so Unit exists to facilitate RPCs that take no parameters.
+message Unit {}
+
 // The Drawing service definition.
 service Drawing {
   // The Connect method provides a two-way streaming RPC, where both the client
   // and server can send a stream of Canvas messages.
   rpc UploadCanvas (DrawingCanvas) returns (DrawingCanvas);
+
+  rpc PullCanvas (Unit) returns (DrawingCanvas);
 
   rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
 }

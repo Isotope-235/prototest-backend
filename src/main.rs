@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use proto::{
     drawing_server::{Drawing, DrawingServer},
-    DrawingCanvas, HealthCheckRequest,
+    DrawingCanvas, HealthCheckRequest, Unit
 };
 use tonic::{server::NamedService, transport::Server, Request, Response, Status};
 
@@ -60,6 +60,15 @@ impl Drawing for TestService {
         let clamped = canvas::clamp(&*lock);
 
         Ok(Response::new(clamped))
+    }
+
+    async fn pull_canvas(
+        &self,
+        _: Request<Unit>
+     ) -> Result<Response<DrawingCanvas>, Status> {
+        let lock = self.canon.lock().unwrap();
+
+        Ok(Response::new(canvas::clamp(&*lock)))
     }
 
     async fn health_check(
