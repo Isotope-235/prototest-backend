@@ -5,8 +5,9 @@ const HEIGHT: usize = 50;
 const SIZE: usize = WIDTH * HEIGHT;
 
 pub fn blank() -> DrawingCanvas {
+    let contents = std::iter::repeat(0).take(SIZE).collect();
     DrawingCanvas {
-        contents: Vec::with_capacity(SIZE),
+        contents,
     }
 }
 
