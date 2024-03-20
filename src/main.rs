@@ -53,14 +53,11 @@ impl Drawing for TestService {
     ) -> Result<Response<DrawingCanvas>, Status> {
         let canvas = uploaded.into_inner();
 
-        let new;
-        {
-            let lock = self.canon.lock().unwrap();
-    
-            (_, new) = canvas::merge(&lock, &canvas)
-        }
+        let mut lock = self.canon.lock().unwrap();
 
-        let clamped = canvas::clamp(&new);
+        let _ = canvas::merge_into(&mut *lock, &canvas);
+
+        let clamped = canvas::clamp(&*lock);
 
         Ok(Response::new(clamped))
     }

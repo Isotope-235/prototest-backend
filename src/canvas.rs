@@ -31,6 +31,7 @@ pub fn clamp(canvas: impl Deref<Target = DrawingCanvas>) -> DrawingCanvas {
     DrawingCanvas { rows: out }
 }
 
+#[allow(dead_code)]
 pub fn merge(a: &DrawingCanvas, b: &DrawingCanvas) -> (bool, DrawingCanvas) {
     let mut changed = false;
     let mut rows = sizevec();
@@ -46,4 +47,19 @@ pub fn merge(a: &DrawingCanvas, b: &DrawingCanvas) -> (bool, DrawingCanvas) {
     }
 
     (changed, DrawingCanvas { rows })
+}
+
+pub fn merge_into(target: &mut DrawingCanvas, source: &DrawingCanvas) -> bool {
+    let mut changed = false;
+    
+    for (left, right) in target.rows.iter_mut().zip(&source.rows) {
+        for (l, r) in left.cols.iter_mut().zip(&right.cols) {
+            if *l != *r {
+                changed = true;
+            }
+            *l = (*l + *r).clamp(0, 1);
+        }
+    }
+
+    changed
 }
