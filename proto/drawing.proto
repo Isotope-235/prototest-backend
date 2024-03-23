@@ -2,25 +2,75 @@ syntax = "proto3";
 
 package drawing;
 
-// Define the Canvas message, which includes a two-dimensional array of signed integers.
-// Since proto3 does not directly support 2D arrays, we'll use a repeated message
-// that contains a repeated field.
-message DrawingCanvas {
-  repeated int32 contents = 1;
-}
-
-// The empty message type.
-//
-// Protobuf requires that an RPC contains a message, so Unit exists to facilitate RPCs that take no parameters.
-message Unit {}
 
 // The Drawing service definition.
 service Drawing {
-  rpc UploadCanvas (DrawingCanvas) returns (Unit);
 
-  rpc PullCanvas (Unit) returns (DrawingCanvas);
+  // Creates a new room with the given canvas if present. Returns a response containing the identifier of the new room.
+  // If omitted, the initial canvas will be the server's default canvas.
+  rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
 
+  // Queries the rooms stored on the server. The response contains information about every open room, including room identifiers and working canvas sizes.
+  rpc QueryRooms (QueryRoomsRequest) returns (QueryRoomsResponse);
+
+  // Upload a canvas to the room with the given identifier. The server will perform checks to ensure that the canvas will fit, and may return an error if any check fails.
+  rpc UploadCanvas (UploadCanvasRequest) returns (UploadCanvasResponse);
+
+  // Pulls the canvas of the room with the given identifier.
+  rpc PullCanvas (PullCanvasRequest) returns (DrawingCanvas);
+
+  // Returns "OK" if the server is accepting requests.
   rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Define the DrawingCanvas message, which includes an array of signed integers.
+// Since proto3 does not directly support 2D arrays, we'll use a repeated integer,
+// each corresponding to a pixel, where the width and height of the canvas is generally defined to be 50 pixels.
+message DrawingCanvas {
+  repeated int32 contents = 1;
+  int32 width = 2;
+  int32 height = 3;
+}
+
+// Includes a canvas and the identifier of the target room.
+message UploadCanvasRequest {
+  DrawingCanvas canvas = 1;
+  int32 room = 2;
+}
+
+// An empty response.
+message UploadCanvasResponse { }
+
+// Includes the identifier of the target room.
+message PullCanvasRequest {
+  int32 room = 1;
+}
+
+// Includes the initial canvas to upload when the new room is created.
+message CreateRoomRequest {
+  DrawingCanvas initial = 1;
+}
+
+// Includes the identifier of a room that was created by the server.
+message CreateRoomResponse {
+  int32 room_id = 1;
+}
+
+// An empty request.
+message QueryRoomsRequest {
+
+}
+
+// Includes details about every open room.
+message QueryRoomsResponse {
+  repeated RoomDetails rooms = 1;
+}
+
+// Includes information about a room; its identifier, working width and working height.
+message RoomDetails {
+  int32 id = 1;
+  int32 width = 2;
+  int32 height = 3;
 }
 
 // The request message for the HealthCheck method.
